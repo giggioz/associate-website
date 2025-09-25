@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Users, 
@@ -117,19 +117,9 @@ const features = [
 
 export default function FeaturesSection() {
   const [activeFeature, setActiveFeature] = useState('members')
-  const contentRef = useRef<HTMLDivElement>(null)
 
   const handleFeatureChange = (featureId: string) => {
     setActiveFeature(featureId)
-    // Scroll to content on mobile after a short delay to allow animation
-    setTimeout(() => {
-      if (contentRef.current && window.innerWidth < 1024) {
-        contentRef.current.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'start' 
-        })
-      }
-    }, 100)
   }
 
   return (
@@ -150,32 +140,22 @@ export default function FeaturesSection() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        {/* Desktop Layout - Side by side */}
+        <div className="hidden lg:grid grid-cols-4 gap-8">
           {/* Tabs Navigation */}
-          <div className="lg:col-span-1">
-            {/* Mobile indicator */}
-            <div className="lg:hidden mb-4 p-3 bg-primary-50 rounded-lg border border-primary-200">
-              <p className="text-sm text-primary-700 font-medium">
-                Sezione attiva: <span className="font-bold">{features.find(f => f.id === activeFeature)?.title}</span>
-              </p>
-            </div>
+          <div className="col-span-1">
             <div className="space-y-2">
               {features.map((feature) => {
                 const Icon = feature.icon
                 return (
                   <button
                     key={feature.id}
-                    onClick={() => handleFeatureChange(feature.id)}
-                    onTouchEnd={(e) => {
-                      e.preventDefault()
-                      handleFeatureChange(feature.id)
-                    }}
-                    className={`w-full text-left p-4 md:p-4 py-5 md:py-4 rounded-lg transition-all duration-300 flex items-center group touch-manipulation ${
+                    onClick={() => setActiveFeature(feature.id)}
+                    className={`w-full text-left p-4 rounded-lg transition-all duration-300 flex items-center group ${
                       activeFeature === feature.id
                         ? 'bg-primary-600 text-white shadow-lg'
-                        : 'bg-gray-50 hover:bg-gray-100 active:bg-gray-200 text-gray-700'
+                        : 'bg-gray-50 hover:bg-gray-100 text-gray-700'
                     }`}
-                    style={{ minHeight: '60px' }}
                   >
                     <Icon className={`w-5 h-5 mr-3 ${
                       activeFeature === feature.id ? 'text-white' : 'text-primary-600'
@@ -191,7 +171,7 @@ export default function FeaturesSection() {
           </div>
 
           {/* Feature Content */}
-          <div ref={contentRef} className="lg:col-span-3">
+          <div className="col-span-3">
             <AnimatePresence mode="wait">
               {features.map((feature) => {
                 if (feature.id !== activeFeature) return null
@@ -242,6 +222,86 @@ export default function FeaturesSection() {
               })}
             </AnimatePresence>
           </div>
+        </div>
+
+        {/* Mobile Layout - Accordion style */}
+        <div className="lg:hidden space-y-4">
+          {features.map((feature) => {
+            const Icon = feature.icon
+            const isActive = activeFeature === feature.id
+            
+            return (
+              <div key={feature.id} className="bg-white rounded-xl shadow-lg overflow-hidden">
+                <button
+                  onClick={() => handleFeatureChange(feature.id)}
+                  onTouchEnd={(e) => {
+                    e.preventDefault()
+                    handleFeatureChange(feature.id)
+                  }}
+                  className={`w-full text-left p-5 transition-all duration-300 flex items-center group touch-manipulation ${
+                    isActive
+                      ? 'bg-primary-600 text-white'
+                      : 'bg-white hover:bg-gray-50 active:bg-gray-100 text-gray-700'
+                  }`}
+                  style={{ minHeight: '60px' }}
+                >
+                  <Icon className={`w-6 h-6 mr-4 ${
+                    isActive ? 'text-white' : 'text-primary-600'
+                  }`} />
+                  <span className="font-semibold text-lg flex-1">{feature.title}</span>
+                  <ChevronRight className={`w-5 h-5 transition-transform duration-300 ${
+                    isActive ? 'rotate-90' : 'group-hover:translate-x-1'
+                  }`} />
+                </button>
+                
+                <AnimatePresence>
+                  {isActive && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3, ease: 'easeInOut' }}
+                      className="overflow-hidden"
+                    >
+                      <div className="p-6 bg-gray-50 border-t border-gray-200">
+                        <div className="flex items-start mb-6">
+                          <div className="bg-primary-100 p-3 rounded-xl mr-4">
+                            <Icon className="w-8 h-8 text-primary-600" />
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-bold text-gray-800 mb-2">
+                              {feature.title}
+                            </h3>
+                            <p className="text-gray-600">
+                              {feature.description}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-3">
+                          <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                            Caratteristiche principali:
+                          </h4>
+                          {feature.details.map((detail, index) => (
+                            <motion.div
+                              key={index}
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ duration: 0.3, delay: index * 0.1 }}
+                              className="flex items-center text-gray-700"
+                            >
+                              <div className="w-2 h-2 bg-primary-600 rounded-full mr-3 flex-shrink-0" />
+                              {detail}
+                            </motion.div>
+                          ))}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )
+          })}
         </div>
       </div>
     </section>
