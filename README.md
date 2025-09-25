@@ -14,7 +14,7 @@ Sito web di presentazione per Associate, una piattaforma gestionale dedicata all
 
 ## 📦 Installazione
 
-1. Clona il repository:
+1. Clona il repo:
 
 ```bash
 git clone <repository-url>
