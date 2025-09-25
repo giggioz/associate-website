@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ChevronRight, Play, Pause } from 'lucide-react'
 import Image from 'next/image'
@@ -53,6 +53,8 @@ const mockups = [
 export default function DemoSection() {
   const [currentMockup, setCurrentMockup] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
+  const touchStartX = useRef(0)
+  const touchEndX = useRef(0)
 
   useEffect(() => {
     if (isPlaying) {
@@ -69,6 +71,32 @@ export default function DemoSection() {
 
   const prevMockup = () => {
     setCurrentMockup((prev) => (prev - 1 + mockups.length) % mockups.length)
+  }
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.targetTouches[0].clientX
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.targetTouches[0].clientX
+  }
+
+  const handleTouchEnd = () => {
+    if (!touchStartX.current || !touchEndX.current) return
+    
+    const distance = touchStartX.current - touchEndX.current
+    const isLeftSwipe = distance > 50
+    const isRightSwipe = distance < -50
+
+    if (isLeftSwipe) {
+      nextMockup()
+    } else if (isRightSwipe) {
+      prevMockup()
+    }
+
+    // Reset values
+    touchStartX.current = 0
+    touchEndX.current = 0
   }
 
   return (
@@ -92,7 +120,12 @@ export default function DemoSection() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Mockup Display */}
           <div className="relative">
-            <div className="relative bg-white rounded-2xl shadow-2xl overflow-hidden">
+            <div 
+              className="relative bg-white rounded-2xl shadow-2xl overflow-hidden touch-manipulation"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
               <div className="bg-gray-100 px-4 py-3 flex items-center">
                 <div className="flex space-x-2">
                   <div className="w-3 h-3 bg-red-500 rounded-full"></div>
@@ -141,14 +174,24 @@ export default function DemoSection() {
             <div className="flex justify-center mt-6 space-x-4">
               <button
                 onClick={prevMockup}
-                className="p-3 bg-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+                onTouchEnd={(e) => {
+                  e.preventDefault()
+                  prevMockup()
+                }}
+                className="p-4 md:p-3 bg-white rounded-full shadow-lg hover:shadow-xl active:shadow-md transition-all duration-300 hover:scale-110 active:scale-95 touch-manipulation"
+                style={{ minWidth: '48px', minHeight: '48px' }}
               >
                 <ChevronLeft className="w-6 h-6 text-gray-600" />
               </button>
               
               <button
                 onClick={() => setIsPlaying(!isPlaying)}
-                className="p-3 bg-primary-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+                onTouchEnd={(e) => {
+                  e.preventDefault()
+                  setIsPlaying(!isPlaying)
+                }}
+                className="p-4 md:p-3 bg-primary-600 text-white rounded-full shadow-lg hover:shadow-xl active:shadow-md transition-all duration-300 hover:scale-110 active:scale-95 touch-manipulation"
+                style={{ minWidth: '48px', minHeight: '48px' }}
               >
                 {isPlaying ? (
                   <Pause className="w-6 h-6" />
@@ -159,7 +202,12 @@ export default function DemoSection() {
               
               <button
                 onClick={nextMockup}
-                className="p-3 bg-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+                onTouchEnd={(e) => {
+                  e.preventDefault()
+                  nextMockup()
+                }}
+                className="p-4 md:p-3 bg-white rounded-full shadow-lg hover:shadow-xl active:shadow-md transition-all duration-300 hover:scale-110 active:scale-95 touch-manipulation"
+                style={{ minWidth: '48px', minHeight: '48px' }}
               >
                 <ChevronRight className="w-6 h-6 text-gray-600" />
               </button>
@@ -171,13 +219,25 @@ export default function DemoSection() {
                 <button
                   key={index}
                   onClick={() => setCurrentMockup(index)}
-                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                  onTouchEnd={(e) => {
+                    e.preventDefault()
+                    setCurrentMockup(index)
+                  }}
+                  className={`w-4 h-4 md:w-3 md:h-3 rounded-full transition-all duration-300 touch-manipulation ${
                     index === currentMockup
                       ? 'bg-primary-600 scale-125'
-                      : 'bg-gray-300 hover:bg-gray-400'
+                      : 'bg-gray-300 hover:bg-gray-400 active:bg-gray-500'
                   }`}
+                  style={{ minWidth: '20px', minHeight: '20px' }}
                 />
               ))}
+            </div>
+            
+            {/* Mobile swipe instruction */}
+            <div className="lg:hidden mt-4 text-center">
+              <p className="text-sm text-gray-500">
+                👆 Scorri per navigare tra le immagini
+              </p>
             </div>
           </div>
 

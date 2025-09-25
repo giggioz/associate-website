@@ -1,5 +1,7 @@
 # Associate Website
 
+Il sito e' deployato usando vercel (ho un account) - basta fare un push su github per aggiornare il sito.
+
 Sito web di presentazione per Associate, una piattaforma gestionale dedicata alle associazioni sportive e culturali.
 
 ## 🚀 Stack Tecnologico

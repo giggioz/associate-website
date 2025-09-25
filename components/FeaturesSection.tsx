@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Users, 
@@ -117,6 +117,20 @@ const features = [
 
 export default function FeaturesSection() {
   const [activeFeature, setActiveFeature] = useState('members')
+  const contentRef = useRef<HTMLDivElement>(null)
+
+  const handleFeatureChange = (featureId: string) => {
+    setActiveFeature(featureId)
+    // Scroll to content on mobile after a short delay to allow animation
+    setTimeout(() => {
+      if (contentRef.current && window.innerWidth < 1024) {
+        contentRef.current.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        })
+      }
+    }, 100)
+  }
 
   return (
     <section id="features" className="py-20 bg-white">
@@ -139,18 +153,29 @@ export default function FeaturesSection() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Tabs Navigation */}
           <div className="lg:col-span-1">
+            {/* Mobile indicator */}
+            <div className="lg:hidden mb-4 p-3 bg-primary-50 rounded-lg border border-primary-200">
+              <p className="text-sm text-primary-700 font-medium">
+                Sezione attiva: <span className="font-bold">{features.find(f => f.id === activeFeature)?.title}</span>
+              </p>
+            </div>
             <div className="space-y-2">
               {features.map((feature) => {
                 const Icon = feature.icon
                 return (
                   <button
                     key={feature.id}
-                    onClick={() => setActiveFeature(feature.id)}
-                    className={`w-full text-left p-4 rounded-lg transition-all duration-300 flex items-center group ${
+                    onClick={() => handleFeatureChange(feature.id)}
+                    onTouchEnd={(e) => {
+                      e.preventDefault()
+                      handleFeatureChange(feature.id)
+                    }}
+                    className={`w-full text-left p-4 md:p-4 py-5 md:py-4 rounded-lg transition-all duration-300 flex items-center group touch-manipulation ${
                       activeFeature === feature.id
                         ? 'bg-primary-600 text-white shadow-lg'
-                        : 'bg-gray-50 hover:bg-gray-100 text-gray-700'
+                        : 'bg-gray-50 hover:bg-gray-100 active:bg-gray-200 text-gray-700'
                     }`}
+                    style={{ minHeight: '60px' }}
                   >
                     <Icon className={`w-5 h-5 mr-3 ${
                       activeFeature === feature.id ? 'text-white' : 'text-primary-600'
@@ -166,7 +191,7 @@ export default function FeaturesSection() {
           </div>
 
           {/* Feature Content */}
-          <div className="lg:col-span-3">
+          <div ref={contentRef} className="lg:col-span-3">
             <AnimatePresence mode="wait">
               {features.map((feature) => {
                 if (feature.id !== activeFeature) return null
